@@ -1,7 +1,9 @@
 name: Build WordPress 7.0.4 PHP 8.3 FPM Alpine with PECL Redis
 
 on:
-  push:
+  pull_request:
+    types:
+      - closed
     branches:
       - main
     paths:
@@ -14,10 +16,13 @@ permissions:
 
 jobs:
   build:
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4
@@ -35,7 +40,7 @@ jobs:
       - name: Build and publish image
         env:
           IMAGE: ghcr.io/${{ github.repository }}/wordpress-7.0.4-php8.3-fpm-alpine-ext-pecl
-          TAG: ${{ github.sha }}
+          TAG: ${{ github.event.pull_request.merge_commit_sha }}
         run: |
           docker buildx build \
             --push \
